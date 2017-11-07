@@ -97,6 +97,14 @@ config DEVKMEM
 	  kind of kernel debugging operations.
 	  When in doubt, say "N".
 
+config LEDS_MINI2440
+	tristate "LED Support for Mini2440 GPIO LEDs"
+	depends on MACH_MINI2440
+	default y if MACH_MINI2440
+	help
+		This option enables support for LEDs connected to GPIO lines
+		on Mini2440 boards.
+
 config BFIN_JTAG_COMM
 	tristate "Blackfin JTAG Communication"
 	depends on BLACKFIN
