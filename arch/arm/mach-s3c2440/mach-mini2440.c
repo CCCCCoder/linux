@@ -233,7 +233,7 @@ static struct s3c2410fb_mach_info mini2440_fb_info __initdata = {
 	.lpcsel		= ((0xCE6) & ~7) | 1<<4,
 };
 
-static struct platform_device *mini2440_devices[] __initdata = {
+static struct platform_device *mini2440_devices[] __initdata = {//zai zhe li zi dong da kai xiang ying de qu dong ?
 	&s3c_device_nand,
 	&s3c_device_usb,
 	&s3c_device_lcd,
