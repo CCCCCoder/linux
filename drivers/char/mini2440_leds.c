@@ -22,89 +22,81 @@
 #include <asm/uaccess.h>
 #include <asm/atomic.h>
 #include <asm/unistd.h>
-
-
-#define DEVICE_NAME "leds"
-
+#define DEVICE_NAME "leds" //设备名(/dev/leds)
+//LED 对应的 GPIO 端口列表
 static unsigned long led_table [] = {
 	S3C2410_GPB(5),
 	S3C2410_GPB(6),
 	S3C2410_GPB(7),
 	S3C2410_GPB(8),
 };
-
+//LED 对应端口将要输出的状态列表
 static unsigned int led_cfg_table [] = {
 	S3C2410_GPIO_OUTPUT,
 	S3C2410_GPIO_OUTPUT,
 	S3C2410_GPIO_OUTPUT,
 	S3C2410_GPIO_OUTPUT,
 };
-//kong zhi led kai guan ,zai ying yong ceng zen me diao yong de zhe ge han shu?
+/*ioctl 函数的实现
+* 在应用/用户层将通过 ioctl 函数向内核传递参数,以控制 LED 的输出状态
+*/
 static int sbc2440_leds_ioctl(
-	struct inode *inode, //struct inode
-	struct file *file,   //struct file
-	unsigned int cmd, // unsigned int 
-	unsigned long arg)// unsigned long
-{
-	switch(cmd) {
-	case 0:
-	case 1:
+	struct inode *inode,
+	struct file *file,
+	unsigned int cmd,
+	unsigned long arg)
+	{
+		switch(cmd) {
+		case 0:
+		case 1:
 		if (arg > 4) {
-			return -EINVAL;
+				return -EINVAL;
 		}
-		s3c2410_gpio_setpin(led_table[arg], !cmd);
+		//根据应用/用户层传递来的参数(取反),通过 s3c2410_gpio_setpin 函数设置 LED 对应的端口寄存器,
+			s3c2410_gpio_setpin(led_table[arg], !cmd);
 		return 0;
-	default:
+		default:
 		return -EINVAL;
 	}
 }
-
-static struct file_operations dev_fops = {//cao zuo jie gou ti 
-	.owner	=	THIS_MODULE,
-	.ioctl	=	sbc2440_leds_ioctl,
+/*
+* 设备函数操作集,在此只有 ioctl 函数,通常还有 read, write, open, close 等,因为本 LED 驱动在下面已经
+* 注册为 misc 设备,因此也可以不用 open/close
+*/
+static struct file_operations dev_fops = {
+	.owner = THIS_MODULE,
+	.ioctl = sbc2440_leds_ioctl,
 };
-
-static struct miscdevice misc = {//zhu ce za xiang she bei ?在内核中用struct miscdevice表示miscdevice设备
-	.minor = MISC_DYNAMIC_MINOR,//minor是这个混杂设备的次设备号，若由系统自动配置，则可以设置为MISC_DYNANIC_MINOR，
-	.name = DEVICE_NAME,//name是设备名 
+/*
+* 把 LED 驱动注册为 MISC 设备
+*/
+static struct miscdevice misc = {
+	.minor = MISC_DYNAMIC_MINOR, //动态设备号
+	.name = DEVICE_NAME,
 	.fops = &dev_fops,
 };
-/*对于用户空间接口来说，我们的实现函数只是给出了IO的值设置的，
-但是ARM的IO管脚使用还是需要配置方向、上拉下拉.....才能正常使用的，
-并且所有的硬件资源，都是受内核所支配的，
-驱动程序必需向内核申请硬件资源才能对硬件进行操作。
-另外还需要对设备进行注册，内核才知道你这个设备是什么东东，
-用到哪些东西。这些操作，我们安排在init里实现！*/
+/*
+* 设备初始化
+*/
 static int __init dev_init(void)
 {
 	int ret;
-
 	int i;
-	
 	for (i = 0; i < 4; i++) {
+	//设置 LED 对应的端口寄存器为输出(OUTPUT)
 		s3c2410_gpio_cfgpin(led_table[i], led_cfg_table[i]);
+	//设置 LED 对应的端口寄存器为低电平输出,在模块加载结束后,四个 LED 应该是全部都是发光状态
 		s3c2410_gpio_setpin(led_table[i], 0);
 	}
-
-	ret = misc_register(&misc);//zhu ce hun za she bei 
-
-	printk (DEVICE_NAME"\tinitialized\n");
-
+	ret = misc_register(&misc); //注册设备
+	printk (DEVICE_NAME"\tinitialized\n"); //打印初始化信息
 	return ret;
 }
-
 static void __exit dev_exit(void)
 {
-  int i;
-
-  for (i = 0; i < 4; i++) {
-    gpio_free(led_table[i]);
-  }
-  misc_deregister(&misc);
-  printk (DEVICE_NAME"\texit led misc driver\n");
+	misc_deregister(&misc);
 }
-
-module_init(dev_init);
-module_exit(dev_exit);
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("airui Inc.");
+module_init(dev_init); //模块初始化,仅当使用 insmod/podprobe 命令加载时有用,如果设备不是通过模块方式加载,此处将不会被调用
+module_exit(dev_exit);//卸载模块,当该设备通过模块方式加载后,可以通过 rmmod 命令卸载,将调用此函数
+MODULE_LICENSE("GPL"); //版权信息
+MODULE_AUTHOR("airui Inc."); //开发者信息
