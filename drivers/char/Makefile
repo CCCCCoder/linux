@@ -113,7 +113,7 @@ obj-$(CONFIG_JS_RTC)		+= js-rtc.o
 js-rtc-y = rtc.o
 
 obj-$(CONFIG_LEDS_MINI2440)	+= mini2440_leds.o
-
+obj-$(CONFIG_MINI2440_BUTTONS)  += mini2440_buttons.o
 # Files generated that shall be removed upon make clean
 clean-files := consolemap_deftbl.c defkeymap.c
 
