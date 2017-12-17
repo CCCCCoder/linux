@@ -23,6 +23,15 @@
 #include <asm/atomic.h>
 #include <asm/unistd.h>
 #define DEVICE_NAME "leds" //设备名(/dev/leds)
+
+/* 应用程序执行ioctl(fd, cmd, arg)时的第2个参数 */
+#define LED_MAGIC 'k'
+#define IOCTL_LED_ON _IOW (LED_MAGIC, 1, int)
+#define IOCTL_LED_OFF _IOW (LED_MAGIC, 2, int)
+#define IOCTL_LED_RUN _IOW (LED_MAGIC, 3, int)
+#define IOCTL_LED_SHINE _IOW (LED_MAGIC, 4, int)
+#define IOCTL_LED_ALLON _IOW (LED_MAGIC, 5, int)
+#define IOCTL_LED_ALLOFF _IOW (LED_MAGIC, 6, int)
 //LED 对应的 GPIO 端口列表
 static unsigned long led_table [] = {
 	S3C2410_GPB(5),
@@ -46,15 +55,22 @@ static int sbc2440_leds_ioctl(
 	unsigned int cmd,
 	unsigned long arg)
 	{
+		unsigned int data;
+		data = (unsigned int)arg;  // 方法一:数据传递
+
+    		//if (__get_user(data, (unsigned int __user *)arg)) //方法二:指针参数传递
+       		// return -EFAULT;
+
 		switch(cmd) {
-		case 0:
-		case 1:
-		if (arg > 4) {
-				return -EINVAL;
-		}
-		//根据应用/用户层传递来的参数(取反),通过 s3c2410_gpio_setpin 函数设置 LED 对应的端口寄存器,
-			s3c2410_gpio_setpin(led_table[arg], !cmd);
-		return 0;
+        	case IOCTL_LED_ON:
+         	   // 设置指定引脚的输出电平为0
+          	  s3c2410_gpio_setpin(led_table[data], 0);
+          	  return 0;
+
+       		case IOCTL_LED_OFF:
+        	    // 设置指定引脚的输出电平为1
+         	  s3c2410_gpio_setpin(led_table[data], 1);
+         	  return 0;
 		default:
 		return -EINVAL;
 	}
