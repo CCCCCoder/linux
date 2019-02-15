@@ -103,9 +103,10 @@ static int __init dev_init(void)
 		s3c2410_gpio_cfgpin(led_table[i], led_cfg_table[i]);
 	//设置 LED 对应的端口寄存器为低电平输出,在模块加载结束后,四个 LED 应该是全部都是发光状态
 		s3c2410_gpio_setpin(led_table[i], 0);
+		printk("config leds gpio\n");
 	}
 	ret = misc_register(&misc); //注册设备
-	printk (DEVICE_NAME"\tinitialized\n"); //打印初始化信息
+	printk (DEVICE_NAME"\t*********** led initialized****************\n"); //打印初始化信息
 	return ret;
 }
 static void __exit dev_exit(void)

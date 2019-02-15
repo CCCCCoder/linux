@@ -181,14 +181,15 @@ static struct s3c2410_uartcfg mini2440_uartcfgs[] __initdata = {
 		.hwport	     = 2,
 		.flags	     = 0,
 		.ucon	     = 0x3c5,
-		.ulcon	     = 0x43,
+		.ulcon	     = 0x03,
 		.ufcon	     = 0x51,
 	}
 };
 
 /* LCD driver info */
 
-static struct s3c2410fb_display mini2440_lcd_cfg __initdata = {
+/*static struct s3c2410fb_display mini2440_lcd_cfg __initdata = {
+
 
 	.lcdcon5	= S3C2410_LCDCON5_FRM565 |
 			  S3C2410_LCDCON5_INVVLINE |
@@ -202,7 +203,9 @@ static struct s3c2410fb_display mini2440_lcd_cfg __initdata = {
 	.height		= 320,
 
 	.pixclock	= 166667, /* HCLK 60 MHz, divisor 10 */
-	.xres		= 240,
+
+/*	.xres		= 240,
+
 	.yres		= 320,
 	.bpp		= 16,
 	.left_margin	= 20,
@@ -220,7 +223,7 @@ static struct s3c2410fb_mach_info mini2440_fb_info __initdata = {
 
 #if 0
 	/* currently setup by downloader */
-	.gpccon		= 0xaa940659,
+/*	.gpccon		= 0xaa940659,
 	.gpccon_mask	= 0xffffffff,
 	.gpcup		= 0x0000ffff,
 	.gpcup_mask	= 0xffffffff,
@@ -232,6 +235,105 @@ static struct s3c2410fb_mach_info mini2440_fb_info __initdata = {
 
 	.lpcsel		= ((0xCE6) & ~7) | 1<<4,
 };
+*/
+	/* LCD driver info */
+//	;NEC 3.5”LCD 的配置和参数设置
+#if defined(CONFIG_FB_S3C2410_N240320)
+#define LCD_WIDTH 240
+#define LCD_HEIGHT 320
+#define LCD_PIXCLOCK 100000
+#define LCD_RIGHT_MARGIN 36
+#define LCD_LEFT_MARGIN 19
+#define LCD_HSYNC_LEN 5
+#define LCD_UPPER_MARGIN 1
+#define LCD_LOWER_MARGIN 5
+#define LCD_VSYNC_LEN 1
+//	;夏普 8”LCD 的配置和参数设置
+#elif defined(CONFIG_FB_S3C2410_TFT640480)
+#define LCD_WIDTH 640
+#define LCD_HEIGHT 480
+#define LCD_PIXCLOCK 80000
+#define LCD_RIGHT_MARGIN 67
+#define LCD_LEFT_MARGIN 40
+#define LCD_HSYNC_LEN 31
+#define LCD_UPPER_MARGIN 25
+#define LCD_LOWER_MARGIN 5
+#define LCD_VSYNC_LEN 1
+//	;统宝 3.5”LCD 的配置和参数设置
+#elif defined(CONFIG_FB_S3C2410_T240320)
+#define LCD_WIDTH 240
+#define LCD_HEIGHT 320
+#define LCD_PIXCLOCK 146250//170000
+#define LCD_RIGHT_MARGIN 25
+#define LCD_LEFT_MARGIN 0
+#define LCD_HSYNC_LEN 4
+#define LCD_UPPER_MARGIN 1
+#define LCD_LOWER_MARGIN 4
+#define LCD_VSYNC_LEN 1
+//;群创 7”LCD 的配置和参数设置
+#elif defined(CONFIG_FB_S3C2410_TFT800480)
+#define LCD_WIDTH 800
+#define LCD_HEIGHT 480
+#define LCD_PIXCLOCK 11463//40000
+#define LCD_RIGHT_MARGIN 67
+#define LCD_LEFT_MARGIN 40
+#define LCD_HSYNC_LEN 31
+#define LCD_UPPER_MARGIN 25
+#define LCD_LOWER_MARGIN 5
+#define LCD_VSYNC_LEN 1
+//;LCD2VGA(分辨率为 1024x768)模块的配置和参数设置
+#elif defined(CONFIG_FB_S3C2410_VGA1024768)
+#define LCD_WIDTH 1024
+#define LCD_HEIGHT 768
+#define LCD_PIXCLOCK 80000
+#define LCD_RIGHT_MARGIN 15
+#define LCD_LEFT_MARGIN 199
+#define LCD_HSYNC_LEN 15
+#define LCD_UPPER_MARGIN 1
+#define LCD_LOWER_MARGIN 1
+#define LCD_VSYNC_LEN 1
+#define LCD_CON5 (S3C2410_LCDCON5_FRM565 | S3C2410_LCDCON5_HWSWP)
+#endif
+#if defined (LCD_WIDTH)
+static struct s3c2410fb_display mini2440_lcd_cfg __initdata = {
+	#if !defined (LCD_CON5)
+		.lcdcon5 = S3C2410_LCDCON5_FRM565 |
+				 S3C2410_LCDCON5_INVVLINE |
+ 			 	 S3C2410_LCDCON5_INVVFRAME |
+ 				 S3C2410_LCDCON5_PWREN |
+ 				 S3C2410_LCDCON5_HWSWP,
+#else
+		.lcdcon5 = LCD_CON5,
+#endif
+		.type = S3C2410_LCDCON1_TFT,
+		.width = LCD_WIDTH,
+		.height = LCD_HEIGHT,
+		.pixclock= LCD_PIXCLOCK,
+		.xres= LCD_WIDTH,
+		.yres= LCD_HEIGHT,
+		.bpp= 16,
+		.left_margin= LCD_LEFT_MARGIN + 1,
+		.right_margin= LCD_RIGHT_MARGIN + 1,
+		.hsync_len= LCD_HSYNC_LEN + 1,
+		.upper_margin= LCD_UPPER_MARGIN + 1,
+		.lower_margin= LCD_LOWER_MARGIN + 1,
+		.vsync_len= LCD_VSYNC_LEN + 1,
+};
+static struct s3c2410fb_mach_info mini2440_fb_info __initdata = {
+		.displays = &mini2440_lcd_cfg,
+		.num_displays = 1,
+		.default_display = 0,
+		.gpccon =0xaa955699,
+		.gpccon_mask = 0xffc003cc,
+		.gpcup =0x0000ffff,
+		.gpcup_mask =0xffffffff,
+		.gpdcon =0xaa95aaa1,
+		.gpdcon_mask = 0xffc0fff0,
+		.gpdup =0x0000faff,
+		.gpdup_mask = 0xffffffff,
+		.lpcsel= 0xf82,
+};
+#endif
 
 static struct platform_device *mini2440_devices[] __initdata = {//zai zhe li zi dong da kai xiang ying de qu dong ?
 	&s3c_device_nand,

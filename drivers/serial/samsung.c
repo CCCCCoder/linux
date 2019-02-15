@@ -53,6 +53,10 @@
 
 #include "samsung.h"
 
+
+#include <linux/gpio.h>
+#include <mach/regs-gpio.h>
+
 /* UART name and device definitions */
 
 #define S3C24XX_SERIAL_NAME	"ttySAC"
@@ -429,6 +433,16 @@ static int s3c24xx_serial_startup(struct uart_port *port)
 
 	/* the port reset code should have done the correct
 	 * register setup for the port controls */
+
+
+	//串口 2 对应的端口初始化
+	if (port->line == 2) {
+		printk("**************uart2 init***************************\r\n");
+		s3c2410_gpio_cfgpin(S3C2410_GPH(6), S3C2410_GPH6_TXD2);
+		s3c2410_gpio_pullup(S3C2410_GPH(6), 1);
+		s3c2410_gpio_cfgpin(S3C2410_GPH(7), S3C2410_GPH7_RXD2);
+		s3c2410_gpio_pullup(S3C2410_GPH(7), 1);
+	}
 
 	return ret;
 
@@ -1143,6 +1157,7 @@ int s3c24xx_serial_probe(struct platform_device *dev,
 	struct s3c24xx_uart_port *ourport;
 	int ret;
 
+	printk("*****************************design serial port********************************\r\n");
 	dbg("s3c24xx_serial_probe(%p, %p) %d\n", dev, info, probe_index);
 
 	ourport = &s3c24xx_serial_ports[probe_index];

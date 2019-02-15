@@ -98,7 +98,7 @@ config DEVKMEM
 	  When in doubt, say "N".
 
 config LEDS_MINI2440
-	tristate "LED Support for Mini2440 GPIO LEDs"
+	tristate "LED Support for Mini2440 GPIO LEDs(new)"
 	depends on MACH_MINI2440
 	default y if MACH_MINI2440
 	help

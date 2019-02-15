@@ -42,6 +42,12 @@
 #include <mach/regs-mem.h>
 #endif
 
+
+#if defined(CONFIG_ARCH_S3C2410)
+#include <mach/regs-mem.h>
+#endif
+
+
 #include "dm9000.h"
 
 /* Board/System/Debug information/definition ---------------- */
@@ -50,6 +56,10 @@
 
 #define CARDNAME	"dm9000"
 #define DRV_VERSION	"1.31"
+
+
+/* DM9000AEP 10/100 ethernet controller */
+#define MACH_MINI2440_DM9K_BASE (S3C2410_CS4 + 0x300)
 
 /*
  * Transmit timeout, default 5 seconds.
@@ -79,6 +89,44 @@ MODULE_PARM_DESC(watchdog, "transmit timeout in milliseconds");
 /* The driver supports the original DM9000E, and now the two newer
  * devices, DM9000A and DM9000B.
  */
+
+
+static struct resource mini2440_dm9k_resource[] = {
+	[0] = {
+		.start = MACH_MINI2440_DM9K_BASE,
+		.end = MACH_MINI2440_DM9K_BASE + 3,
+		.flags = IORESOURCE_MEM
+	},
+	[1] = {
+		.start = MACH_MINI2440_DM9K_BASE + 4,
+		.end = MACH_MINI2440_DM9K_BASE + 7,
+		.flags = IORESOURCE_MEM
+	},
+	[2] = {
+		.start = IRQ_EINT7,
+		.end = IRQ_EINT7,
+		.flags = IORESOURCE_IRQ | IORESOURCE_IRQ_HIGHEDGE,
+	}
+};
+/*
+* * * The DM9000 has no eeprom, and it's MAC address is set by
+* * * the bootloader before starting the kernel.
+*
+*
+*/
+static struct dm9000_plat_data mini2440_dm9k_pdata = {
+	.flags= (DM9000_PLATF_16BITONLY | DM9000_PLATF_NO_EEPROM),
+};
+static struct platform_device mini2440_device_eth = {
+	.name= "dm9000",
+	.id= -1,
+	.num_resources = ARRAY_SIZE(mini2440_dm9k_resource),
+	.resource= mini2440_dm9k_resource,
+	.dev= {
+		.platform_data = &mini2440_dm9k_pdata,
+	},
+};
+
 
 enum dm9000_type {
 	TYPE_DM9000E,	/* original DM9000 */
@@ -1562,6 +1610,7 @@ dm9000_init(void)
 	*((volatile unsigned int *)S3C2410_BWSCON) =
 	(oldval_bwscon&~(3<<16))|S3C2410_BWSCON_DW4_16 | S3C2410_BWSCON_WS4 | S3C2410_BWSCON_ST4;
 	*((volatile unsigned int *)S3C2410_BANKCON4) = 0x1f7c;
+	printk("****************net init???????????*************************\r\n");
 #endif	
 	printk(KERN_INFO "%s Ethernet Driver, V%s\n", CARDNAME, DRV_VERSION);
 

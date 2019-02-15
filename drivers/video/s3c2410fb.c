@@ -828,6 +828,8 @@ static int __init s3c24xxfb_probe(struct platform_device *pdev,
 	int size;
 	u32 lcdcon1;
 
+	printk("****************************lcd init******************************************\r\n");
+
 	mach_info = pdev->dev.platform_data;
 	if (mach_info == NULL) {
 		dev_err(&pdev->dev,
